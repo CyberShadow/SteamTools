@@ -12,16 +12,13 @@ import std.stdio;
 import ae.sys.persistence.keyvalue;
 import ae.utils.array;
 
-import steam;
+import cache;
+import steamcmd;
 import vdf;
 import web;
 
 void main()
 {
-	auto db = KeyValueDatabase("cache.s3db");
-	auto packages = KeyValueStore!(int, VDF)(&db, "packages");
-	auto apps = KeyValueStore!(int, VDF)(&db, "apps");
-
 	SteamCMD steam;
 	steam.start(`/home/vladimir/opt/steamcmd/steamcmd.sh`);
 	steam.login("the_cybershadow");
@@ -29,9 +26,7 @@ void main()
 	auto appIDs = steam
 		.getLicenses()
 		.filter!(license => license.packageID != 0)
-		.map!(license =>
-			packages.getOrAdd(license.packageID,
-				steam.getPackageInfo(license.packageID))
+		.map!(license => steam.getPackageInfoCached(license.packageID)
 			[license.packageID.text]
 			["appids"]
 			.nodes
@@ -62,7 +57,7 @@ void main()
 		catch (Exception e)
 		{
 			string name;
-			auto vdf = apps.getOrAdd(appID, steam.getAppInfo(appID));
+			auto vdf = steam.getAppInfoCached(appID);
 			try
 				name = vdf[appID.text]["common"]["name"].value;
 			catch (Exception e)

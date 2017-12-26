@@ -7,7 +7,8 @@ import std.json;
 
 import ae.utils.array;
 
-import steam;
+import cache;
+import steamcmd;
 
 void main()
 {
@@ -15,27 +16,24 @@ void main()
 	steam.start(`/home/vladimir/opt/steamcmd/steamcmd.sh`);
 	steam.login("the_cybershadow");
 	auto licenses = steam.getLicenses();
-	foreach (id; licenses.map!(license => license.apps).join.sort().uniq)
+	foreach (id; licenses.map!(license => steam.getPackageInfoCached(license.packageID)[license.packageID.text]["appids"].nodes.map!(node => node.value.to!int)).join.sort().uniq)
 	{
-		auto info = steam.getAppInfo(id);
+		auto info = steam.getAppInfoCached(id);
 		bool installable = false;
-		auto root = info.info[id.text];
-		if (root.type != JSON_TYPE.OBJECT)
-			continue;
-		if ("depots" !in root.object)
-			continue;
+		auto root = info[id.text];
 		bool haveLinux, big;
-		foreach (depotId, depotData; root["depots"].object)
+		if ("depots" !in root)
+			continue;
+		foreach (depot; root["depots"].nodes)
 		{
-			if (depotId == "branches" || depotData.type != JSON_TYPE.OBJECT)
+			if (depot.key == "branches" || !depot.nodes)
 				continue;
-			if ("config" in depotData &&
-				"oslist" in depotData["config"] &&
-				depotData["config"]["oslist"].str.split(",").contains("linux"))
-				haveLinux = true;
-			if ("maxsize" in depotData &&
-				depotData["maxsize"].str.to!long > 100*1024*1024)
-				big = true;
+			try
+				haveLinux |= depot["config"]["oslist"].value.split(",").contains("linux");
+			catch (Exception e) {}
+			try
+				big |= depot["maxsize"].value.to!long > 100*1024*1024;
+			catch (Exception e) {}
 		}
 		if (haveLinux && !big)
 			steam.install(id);
