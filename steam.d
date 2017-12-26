@@ -1,4 +1,5 @@
 import std.algorithm;
+import std.conv;
 import std.datetime;
 import std.json;
 import std.process;
