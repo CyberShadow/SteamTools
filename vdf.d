@@ -11,21 +11,29 @@ struct VDF
 	string value;
 	VDF[] nodes;
 
-	ref VDF opIndex(string s)
+	VDF* opIn_r(string s)
 	{
 		foreach (ref node; nodes)
 			if (node.key == s)
-				return node;
+				return &node;
+		return null;
+	}
+
+	ref VDF opIndex(string s)
+	{
+		auto pnode = s in this;
+		if (pnode)
+			return *pnode;
 		throw new Exception("No such VDF key: " ~ s);
 	}
 
 	// Don't forget to populate value or nodes!
-	ref VDF getOrAdd(string key)
+	ref VDF getOrAdd(string s)
 	{
-		foreach (ref node; nodes)
-			if (node.key == key)
-				return node;
-		nodes ~= VDF(key);
+		auto pnode = s in this;
+		if (pnode)
+			return *pnode;
+		nodes ~= VDF(s);
 		return nodes[$-1];
 	}
 }
