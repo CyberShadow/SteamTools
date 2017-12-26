@@ -72,7 +72,9 @@ struct SteamCMD
 		int flags;
 		SysTime purchaseDate;
 		string purchaseLocation, purchaseMethod;
-		int[] apps, depots;
+
+		int[] someApps, someDepots; /// Incomplete!!!
+		int numApps, numDepots;
 	}
 
 	License[] getLicenses()
@@ -93,12 +95,12 @@ struct SteamCMD
 			assert(chunk[0].matchInto(`^License packageID (\d+):$`, license.packageID), chunk[0]);
 			assert(chunk[1].matchInto(`^ - State   : (\w+)\( flags (\d+) \) - Purchased : (\w\w\w \w\w\w +\d+ \d\d:\d\d:\d\d \d\d\d\d) in "(.*)", (.*)$`,
 					license.state, license.flags, purchaseDateStr, license.purchaseLocation, license.purchaseMethod), chunk[1]);
-			assert(chunk[2].matchInto(`^ - Apps    : (.*) \(\d+ in total\)$`, appsStr), chunk[2]);
-			assert(chunk[3].matchInto(`^ - Depots   : (.*) \(\d+ in total\)$`, depotsStr), chunk[3]);
+			assert(chunk[2].matchInto(`^ - Apps    : (.*) \((\d+) in total\)$`, appsStr, license.numApps), chunk[2]);
+			assert(chunk[3].matchInto(`^ - Depots   : (.*) \((\d+) in total\)$`, depotsStr, license.numDepots), chunk[3]);
 
 			license.purchaseDate = purchaseDateStr.parseTime!`D M d H:i:s Y`();
-			license.apps   = appsStr  .split(", ").filter!(s => s.length && s != "...").map!(to!int).array();
-			license.depots = depotsStr.split(", ").filter!(s => s.length && s != "...").map!(to!int).array();
+			license.someApps   = appsStr  .split(", ").filter!(s => s.length && s != "...").map!(to!int).array();
+			license.someDepots = depotsStr.split(", ").filter!(s => s.length && s != "...").map!(to!int).array();
 			result ~= license;
 		}
 
