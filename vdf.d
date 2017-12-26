@@ -18,10 +18,23 @@ struct VDF
 				return node;
 		throw new Exception("No such VDF key: " ~ s);
 	}
+
+	// Don't forget to populate value or nodes!
+	ref VDF getOrAdd(string key)
+	{
+		foreach (ref node; nodes)
+			if (node.key == key)
+				return node;
+		nodes ~= VDF(key);
+		return nodes[$-1];
+	}
 }
 
 VDF parseVDF(string s)
 {
+	auto os = s;
+	scope(failure) { import std.file; write("bad.vdf", os); }
+
 	char read()
 	{
 		enforce(s.length, "Unexpected end of string");
@@ -49,7 +62,7 @@ VDF parseVDF(string s)
 			auto c = read;
 			if (escape || c != '\\')
 			{
-				if (c == '"')
+				if (c == '"' && !escape)
 					return result;
 				result ~= c;
 				escape = false;
@@ -74,6 +87,7 @@ VDF parseVDF(string s)
 	{
 		VDF node;
 		node.key = readString();
+		scope(failure) { import std.stdio; stderr.writeln("Error reading node " ~ node.key ~ ":"); }
 		switch (read())
 		{
 			case '\n':
@@ -139,6 +153,7 @@ string generateVDF(in VDF vdf)
 
 	void putNode(in ref VDF vdf, int indent)
 	{
+		scope(failure) { import std.stdio; stderr.writeln("Error serializing node " ~ vdf.key ~ ":"); }
 		putIndent(indent);
 		putString(vdf.key);
 

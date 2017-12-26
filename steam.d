@@ -1,7 +1,6 @@
 import std.algorithm;
 import std.conv;
 import std.datetime;
-import std.json;
 import std.process;
 import std.range;
 import std.stdio;
@@ -9,6 +8,8 @@ import std.string;
 
 import ae.utils.regex;
 import ae.utils.time;
+
+import vdf;
 
 struct SteamCMD
 {
@@ -108,68 +109,22 @@ struct SteamCMD
 		return result;
 	}
 
-	struct AppInfo
+	VDF getPackageInfo(int id)
 	{
-		JSONValue info;
+		sendLine("package_info_print " ~ text(id));
+		stderr.writefln("* Receiving package info.");
+		waitPrompt();
+		stderr.writefln("* Got package info.");
+		return parseVDF(output.join("\n") ~ "\n");
 	}
 
-	AppInfo getAppInfo(int id)
+	VDF getAppInfo(int id)
 	{
 		sendLine("app_info_print " ~ text(id));
 		stderr.writefln("* Receiving app info.");
 		waitPrompt();
-		AppInfo result;
-
-		struct Reader
-		{
-			string data;
-
-			void skipWhiteSpace()
-			{
-				while (data.skipOver("\t")) {}
-			}
-
-			string readString()
-			{
-				skipWhiteSpace();
-				assert(data.skipOver("\""));
-				auto p = data.findSplit("\"\t\t");
-				data = p[2];
-				skipWhiteSpace();
-				return p[0];
-			}
-
-			JSONValue readObject()
-			{
-				JSONValue result;
-				while (true)
-				{
-					skipWhiteSpace();
-					if (data.skipOver("}"))
-						return result;
-					else
-						readKeyValue(result);
-				}
-			}
-
-			void readKeyValue(ref JSONValue obj)
-			{
-				auto name = readString();
-				if (data.skipOver("{"))
-					obj[name] = readObject();
-				else
-					obj[name] = readString();
-				skipWhiteSpace();
-			}
-		}
-
-		auto reader = Reader(output[1..$].join("\t\t"));
-		scope(failure) stderr.writeln("Error here: " ~ reader.data[0..min($, 100)]);
-		while (reader.data.length)
-			reader.readKeyValue(result.info);
-
 		stderr.writefln("* Got app info.");
-		return result;
+		return parseVDF(output[1..$].join("\n") ~ "\n");
 	}
 
 	void install(int id, bool validate = false)
