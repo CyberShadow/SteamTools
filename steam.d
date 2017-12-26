@@ -61,6 +61,7 @@ struct SteamCMD
 	{
 		sendLine("login " ~ credentials.join(" "));
 		waitLine("Logged in OK");
+		waitLine("Waiting for user info...OK");
 		stderr.writeln("* Log in OK.");
 	}
 
@@ -77,7 +78,7 @@ struct SteamCMD
 	License[] getLicenses()
 	{
 		sendLine("licenses_print");
-		waitLine("Waiting for license info...OK");
+		// waitLine("Waiting for license info...OK");
 		stderr.writefln("* Receiving license lines.");
 		waitPrompt();
 		waitPrompt();
