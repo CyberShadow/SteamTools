@@ -2,16 +2,21 @@ import core.time;
 
 import std.algorithm.iteration;
 import std.algorithm.searching;
+import std.algorithm.sorting;
 import std.array;
 import std.conv;
 import std.datetime.systime;
+import std.exception;
 import std.file;
 import std.regex;
 import std.string;
+import std.typecons;
 
 import ae.sys.net;
 import ae.sys.net.cachedcurl;
+import ae.utils.array;
 import ae.utils.json;
+import ae.utils.meta;
 import ae.utils.regex;
 import ae.utils.time.common;
 import ae.utils.time.format;
@@ -35,6 +40,9 @@ struct StorePage
 	string url;
 	UserTag[] userTags;
 	GameTag[] gameTags;
+	string reviewSummary;
+	int reviewPercentage, reviewCount;
+	string[] developers;
 }
 
 StorePage getStorePage(int appID)
@@ -62,7 +70,29 @@ StorePage getStorePage(int appID)
 
 	result.gameTags = html
 		.matchAll(re!`<div class="game_area_details_specs"><div class="icon"><a href="http://store.steampowered.com/search/\?category2=(\d+)&snr=[0-9_]*"><img class="category_icon" src="http://store.edgecast.steamstatic.com/public/images/v6/ico/ico_\w+.png"></a></div><a class="name" href="http://store.steampowered.com/search/\?category2=\d+&snr=[0-9_]*">(.*?)</a></div>`)
-		.map!(m => GameTag(m[2], m[01].to!int))
+		.map!(m => GameTag(m[2], m[1].to!int))
+		.array;
+
+	auto reviewSummaries = html
+		.matchAll(re!`<span class="game_review_summary .*?>(.*?)</span>`)
+		.map!(m => m[1])
+		.array;
+	enforce(reviewSummaries.length.isOneOf(0, 1, 2, 4),
+		"Unexpected game_review_summary count");
+	result.reviewSummary = reviewSummaries.length ? reviewSummaries[$/4] :
+		html.canFind("No user reviews") ? "No user reviews" :
+		enforce(null, "Can't find reviews");
+
+	list(result.reviewPercentage, result.reviewCount) = html
+		.matchFirst(re!`"(\d+)% of the ([0-9,]*) user reviews for this game are positive\."`)
+		.I!(m => tuple(m[1].length ? m[1].to!int : 0, m[2].length ? m[2].replace(",", "").to!int : 0));
+
+	result.developers = html
+		.matchAll(re!`<a href="http://store\.steampowered\.com/search/\?developer=.*?">(.*?)</a>`)
+		.map!(m => m[1])
+		.array
+		.sort
+		.uniq
 		.array;
 
 	return result;
