@@ -62,6 +62,9 @@ StorePage getStorePage(int appID)
 	auto html = cast(string)getFile(result.url);
 	scope(failure) std.file.write("bad.html", html);
 
+	if (html.canFind(`<span class="error">This item is currently unavailable in your region</span>`))
+		throw new Exception("This item is currently unavailable in your region");
+
 	result.userTags = html
 		.split("\r\n")
 		.findSplit!startsWith(["\t\t\tInitAppTagModal( "])[2][0]

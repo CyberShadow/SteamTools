@@ -109,6 +109,9 @@ void main()
 			if (e.msg == "No such page (redirect to another AppID)")
 				categories[appID] ~= CatPrefix.error ~ "Redirect";
 			else
+			if (e.msg == "This item is currently unavailable in your region")
+				categories[appID] ~= CatPrefix.error ~ "Region";
+			else
 				//categories[appID] ~= CatPrefix.error ~ "Error";
 				throw e;
 		}
