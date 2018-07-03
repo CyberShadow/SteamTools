@@ -48,15 +48,15 @@ struct StorePage
 StorePage getStorePage(int appID)
 {
 	StorePage result;
-	result.url = "http://store.steampowered.com/app/" ~ appID.text ~ "/";
+	result.url = "https://store.steampowered.com/app/" ~ appID.text ~ "/";
 	try
 		result.url = resolveRedirect(result.url);
 	catch (Exception e)
 	{}
 
-	if (result.url == "http://store.steampowered.com/")
+	if (result.url == "https://store.steampowered.com/")
 		throw new Exception("No such page (redirect to /)");
-	if (result.url.startsWith("http://store.steampowered.com/app/") && result.url.split("/")[4] != appID.text)
+	if (result.url.startsWith("https://store.steampowered.com/app/") && result.url.split("/")[4] != appID.text)
 		throw new Exception("No such page (redirect to another AppID)");
 
 	auto html = cast(string)getFile(result.url);
@@ -69,7 +69,7 @@ StorePage getStorePage(int appID)
 		.jsonParse!(UserTag[]);
 
 	result.gameTags = html
-		.matchAll(re!`<div class="game_area_details_specs"><div class="icon"><a href="http://store.steampowered.com/search/\?category2=(\d+)&snr=[0-9_]*"><img class="category_icon" src="http://store.edgecast.steamstatic.com/public/images/v6/ico/ico_\w+.png"></a></div><a class="name" href="http://store.steampowered.com/search/\?category2=\d+&snr=[0-9_]*">(.*?)</a></div>`)
+		.matchAll(re!`<div class="game_area_details_specs"><div class="icon"><a href="https://store.steampowered.com/search/\?category2=(\d+)&snr=[0-9_]*"><img class="category_icon" src="https://store.edgecast.steamstatic.com/public/images/v6/ico/ico_\w+.png"></a></div><a class="name" href="https://store.steampowered.com/search/\?category2=\d+&snr=[0-9_]*">(.*?)</a></div>`)
 		.map!(m => GameTag(m[2], m[1].to!int))
 		.array;
 
@@ -88,7 +88,7 @@ StorePage getStorePage(int appID)
 		.I!(m => tuple(m[1].length ? m[1].to!int : 0, m[2].length ? m[2].replace(",", "").to!int : 0));
 
 	result.developers = html
-		.matchAll(re!`<a href="http://store\.steampowered\.com/search/\?developer=.*?">(.*?)</a>`)
+		.matchAll(re!`<a href="https://store\.steampowered\.com/search/\?developer=.*?">(.*?)</a>`)
 		.map!(m => m[1])
 		.array
 		.sort
