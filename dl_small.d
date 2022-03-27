@@ -14,7 +14,7 @@ void main()
 {
 	SteamCMD steam;
 	steam.start();
-	steam.login("the_cybershadow");
+	steam.login();
 	auto licenses = steam.getLicenses();
 	foreach (id; licenses.map!(license => steam.getPackageInfoCached(license.packageID)[license.packageID.text]["appids"].nodes.map!(node => node.value.to!int)).join.sort().uniq)
 	{

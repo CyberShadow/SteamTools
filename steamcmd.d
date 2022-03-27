@@ -1,6 +1,7 @@
 import std.algorithm;
 import std.conv;
 import std.datetime;
+import std.file : readText;
 import std.process;
 import std.range;
 import std.stdio;
@@ -61,6 +62,8 @@ struct SteamCMD
 
 	void login(string[] credentials...)
 	{
+		if (!credentials.length)
+			credentials = "credentials.txt".readText().strip().split();
 		sendLine("login " ~ credentials.join(" "));
 		waitLine("Logged in OK");
 		waitLine("Waiting for user info...OK");

@@ -46,7 +46,7 @@ void main()
 
 	SteamCMD steam;
 	steam.start();
-	steam.login("the_cybershadow");
+	steam.login();
 
 	auto licenses = steam
 		.getLicenses()
