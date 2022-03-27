@@ -77,12 +77,17 @@ StorePage getStorePage(int appID)
 		.array;
 
 	auto reviewSummaries = html
-		.matchAll(re!`<span class="game_review_summary .*?>(.*?)</span>`)
+		.matchAll(re!`\t\t<span class="game_review_summary .*?>(.*?)</span>`)
 		.map!(m => m[1])
 		.array;
-	enforce(reviewSummaries.length.isOneOf(0, 1, 2, 4),
+	enforce(reviewSummaries.length.isOneOf(
+			0,                  // Unreviewable (DLC)
+			1,                  // No reviews
+			3,                  // No recent reviews
+			6,                  // (most pages)
+		),
 		"Unexpected game_review_summary count");
-	result.reviewSummary = reviewSummaries.length ? reviewSummaries[$/4] :
+	result.reviewSummary = reviewSummaries.length > 1 ? reviewSummaries[1] :
 		html.canFind("No user reviews") ? "No user reviews" :
 		enforce(null, "Can't find reviews");
 

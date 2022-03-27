@@ -77,11 +77,11 @@ void main()
 		.parseVDF();
 
 	auto appsConfig = &sharedConfig
-		["UserLocalConfigStore"]
+		["UserRoamingConfigStore"]
 		["Software"]
 		["Valve"]
 		["Steam"]
-		["Apps"];
+		["apps"];
 
 	// File csv = File("review.csv", "wb");
 

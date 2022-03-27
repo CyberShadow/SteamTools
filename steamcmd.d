@@ -1,6 +1,7 @@
 import std.algorithm;
 import std.conv;
 import std.datetime;
+import std.exception;
 import std.file : readText;
 import std.process;
 import std.range;
@@ -50,7 +51,7 @@ struct SteamCMD
 		auto steamCmdPath = environment.get("STEAMCMD", "steamcmd");
 		p = pipeProcess([steamCmdPath], Redirect.stdin | Redirect.stdout);
 
-		waitLine("Loading Steam API...OK.");
+		waitLine("Loading Steam API...OK");
 		stderr.writeln("* Steam started OK.");
 	}
 
@@ -65,7 +66,6 @@ struct SteamCMD
 		if (!credentials.length)
 			credentials = "credentials.txt".readText().strip().split();
 		sendLine("login " ~ credentials.join(" "));
-		waitLine("Logged in OK");
 		waitLine("Waiting for user info...OK");
 		stderr.writeln("* Log in OK.");
 	}
@@ -89,20 +89,21 @@ struct SteamCMD
 		stderr.writefln("* Receiving license lines.");
 		waitPrompt();
 		waitPrompt();
-		assert(output.length % 4 == 0, "Wrong modulus of licenses_print output length");
+		enforce(output.length % 4 == 0, "Wrong modulus of licenses_print output length");
 
 		License[] result;
 		foreach (chunk; output.chunks(4))
 		{
 			scope(failure) stderr.writeln("Error with: ", chunk);
 			License license;
-			string purchaseDateStr, appsStr, depotsStr;
-			assert(chunk[0].matchInto(`^License packageID (\d+):$`, license.packageID), chunk[0]);
-			assert(chunk[1].matchInto(`^ - State   : (\w+)\( flags (\d+) \) - Purchased : (\w\w\w \w\w\w +\d+ \d\d:\d\d:\d\d \d\d\d\d) in "(.*)", (.*)$`,
-					license.state, license.flags, purchaseDateStr, license.purchaseLocation, license.purchaseMethod), chunk[1]);
-			assert(chunk[2].matchInto(`^ - Apps    : (.*) \((\d+) in total\)$`, appsStr, license.numApps), chunk[2]);
-			assert(chunk[3].matchInto(`^ - Depots   : (.*) \((\d+) in total\)$`, depotsStr, license.numDepots), chunk[3]);
+			string purchaseDateStr, appsStr, depotsStr, flagsStr;
+			enforce(chunk[0].matchInto(`^License packageID (\d+):$`, license.packageID), chunk[0]);
+			enforce(chunk[1].matchInto(`^ - State   : (\w+) \(flags 0x([0-9a-f]+)\) - Purchased : (\w\w\w \w\w\w +\d+ \d\d:\d\d:\d\d \d\d\d\d) in "(.*)", (.*)$`,
+					license.state, flagsStr, purchaseDateStr, license.purchaseLocation, license.purchaseMethod), chunk[1]);
+			enforce(chunk[2].matchInto(`^ - Apps\t: (.*) \((\d+) in total\)$`, appsStr, license.numApps), chunk[2]);
+			enforce(chunk[3].matchInto(`^ - Depots   : (.*) \((\d+) in total\)$`, depotsStr, license.numDepots), chunk[3]);
 
+			license.flags = flagsStr.to!int(16);
 			license.purchaseDate = purchaseDateStr.parseTime!`D M d H:i:s Y`();
 			license.someApps   = appsStr  .split(", ").filter!(s => s.length && s != "...").map!(to!int).array();
 			license.someDepots = depotsStr.split(", ").filter!(s => s.length && s != "...").map!(to!int).array();
@@ -119,7 +120,7 @@ struct SteamCMD
 		stderr.writefln("* Receiving package info.");
 		waitPrompt();
 		stderr.writefln("* Got package info.");
-		return parseVDF(output.join("\n") ~ "\n");
+		return parseVDF(output[1..$].join("\n") ~ "\n");
 	}
 
 	VDF getAppInfo(int id)
