@@ -45,7 +45,7 @@ void main()
 	];
 
 	SteamCMD steam;
-	steam.start(`/home/vladimir/opt/steamcmd/steamcmd.sh`);
+	steam.start();
 	steam.login("the_cybershadow");
 
 	auto licenses = steam

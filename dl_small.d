@@ -13,7 +13,7 @@ import steamcmd;
 void main()
 {
 	SteamCMD steam;
-	steam.start(`/home/vladimir/opt/steamcmd/steamcmd.sh`);
+	steam.start();
 	steam.login("the_cybershadow");
 	auto licenses = steam.getLicenses();
 	foreach (id; licenses.map!(license => steam.getPackageInfoCached(license.packageID)[license.packageID.text]["appids"].nodes.map!(node => node.value.to!int)).join.sort().uniq)

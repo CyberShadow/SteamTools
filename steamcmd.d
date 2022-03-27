@@ -44,8 +44,9 @@ struct SteamCMD
 		p.stdin.flush();
 	}
 
-	void start(string steamCmdPath)
+	void start()
 	{
+		auto steamCmdPath = environment.get("STEAMCMD", "steamcmd");
 		p = pipeProcess([steamCmdPath], Redirect.stdin | Redirect.stdout);
 
 		waitLine("Loading Steam API...OK.");
