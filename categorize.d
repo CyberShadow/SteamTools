@@ -4,8 +4,11 @@ import std.algorithm.sorting;
 import std.array;
 import std.ascii;
 import std.conv;
+import std.digest.sha;
 import std.file;
+import std.format;
 import std.parallelism;
+import std.path;
 import std.range;
 import std.stdio;
 
@@ -15,6 +18,7 @@ import ae.utils.meta;
 import ae.utils.time.format;
 
 import cache;
+import config;
 import steamcmd;
 import vdf;
 import web;
@@ -72,7 +76,13 @@ void main()
 		.uniq
 		.array;
 
-	auto sharedConfig = "sharedconfig.vdf"
+	auto userDataDir = format!"%s/userdata/%s/7"(
+		getConfig().steamPath.expandTilde,
+		getConfig().accountId,
+	);
+
+	auto sharedConfigPath = userDataDir.buildPath("remote", "sharedconfig.vdf");
+	auto sharedConfig = sharedConfigPath
 		.readText()
 		.parseVDF();
 
@@ -147,5 +157,29 @@ void main()
 
 	sharedConfig
 		.generateVDF
-		.toFile("sharedconfig.vdf");
+		.toFile(sharedConfigPath);
+
+	if (false)  // Not actually necessary?
+	{
+		auto remoteCachePath = userDataDir.buildPath("remotecache.vdf");
+		auto remoteCache = remoteCachePath
+			.readText()
+			.parseVDF();
+
+		auto sharedConfigMeta = &remoteCache
+			["7"]
+			["sharedconfig.vdf"];
+		(*sharedConfigMeta)["size"].value = getSize(sharedConfigPath).to!string;
+		(*sharedConfigMeta)["sha"].value = readText(sharedConfigPath).sha1Of.toHexString!(LetterCase.lower).idup;
+		(*sharedConfigMeta)["time"].value = timeLastModified(sharedConfigPath).toUnixTime.to!string;
+
+		remoteCache
+			.generateVDF
+			.toFile(remoteCachePath);
+	}
+
+	auto htmlCacheDir = format!"%s/config/htmlcache"(
+		getConfig().steamPath.expandTilde,
+	);
+	rmdirRecurse(htmlCacheDir);  // Required to get Steam library to load the new sharedconfig.vdf
 }

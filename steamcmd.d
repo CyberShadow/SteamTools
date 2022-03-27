@@ -11,6 +11,7 @@ import std.string;
 import ae.utils.regex;
 import ae.utils.time;
 
+import config;
 import vdf;
 
 struct SteamCMD
@@ -48,8 +49,7 @@ struct SteamCMD
 
 	void start()
 	{
-		auto steamCmdPath = environment.get("STEAMCMD", "steamcmd");
-		p = pipeProcess([steamCmdPath], Redirect.stdin | Redirect.stdout);
+		p = pipeProcess([getConfig().steamcmd], Redirect.stdin | Redirect.stdout);
 
 		waitLine("Loading Steam API...OK");
 		stderr.writeln("* Steam started OK.");
@@ -64,7 +64,7 @@ struct SteamCMD
 	void login(string[] credentials...)
 	{
 		if (!credentials.length)
-			credentials = "credentials.txt".readText().strip().split();
+			credentials = getConfig().credentials.split;
 		sendLine("login " ~ credentials.join(" "));
 		waitLine("Waiting for user info...OK");
 		stderr.writeln("* Log in OK.");

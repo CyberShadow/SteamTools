@@ -8,6 +8,7 @@ import std.conv;
 import std.datetime.systime;
 import std.exception;
 import std.file;
+import std.range;
 import std.regex;
 import std.string;
 import std.typecons;
@@ -20,6 +21,8 @@ import ae.utils.meta;
 import ae.utils.regex;
 import ae.utils.time.common;
 import ae.utils.time.format;
+
+import config;
 
 struct UserTag
 {
@@ -116,10 +119,25 @@ static this()
 	mkdirRecurse("cookies");
 	SysTime birthday = Clock.currTime() - (25*365).days;
 	std.file.write("cookies/store.steampowered.com",
-		"birthtime=%d; lastagecheckage=%2d-%s-%d; mature_content=1".format(
-			birthday.toUnixTime,
-			birthday.day,
-			MonthLongNames[birthday.month-1],
-			birthday.year,
-		));
+		chain(
+			getConfig().cookies
+			.split(";")
+			.map!(s => s.findSplit("="))
+			.map!(p => tuple(p[0], p[2])),
+			only(
+				tuple("birthtime", format!"%d"(birthday.toUnixTime)),
+				tuple("lastagecheckage", format!"%2d-%s-%d"(
+					birthday.day,
+					MonthLongNames[birthday.month-1],
+					birthday.year,
+				)),
+				tuple("mature_content", "1"),
+				tuple("wants_mature_content", "1"),
+			)
+		)
+		.assocArray
+		.byKeyValue
+		.map!(kv => format!"%s=%s"(kv.key, kv.value))
+		.join("; ")
+	);
 }

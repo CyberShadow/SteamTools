@@ -1,0 +1,22 @@
+# Copy this file to config.ini and edit the values below.
+
+# Path to SteamCMD.
+# The default assumes that steamcmd is in PATH.
+steamcmd=steamcmd
+
+# How to authenticate to SteamCMD.
+# Passed to SteamCMD's "login" command.
+# Can be "anonymous", a username, or a username and password.
+credentials=gabelogannewell
+
+# Your numeric Steam account ID.
+accountId=22202
+
+# Steam installation path.
+# This folder (usually) contains the "steamapps" folder.
+steamPath=~/.local/share/Steam
+
+# Optional: Web cookies. Needed to access store pages that require login to view.
+# Specify the full value of the "Cookie" header when visiting store.steampowered.com.
+# Don't include the header name ("Cookie: ").
+cookies=browserid=1234567890123456789; steamMachineAuth12345678901234567=; sessionid=012346789abcdef012345678
