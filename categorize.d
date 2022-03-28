@@ -178,8 +178,13 @@ void main()
 			.toFile(remoteCachePath);
 	}
 
-	auto htmlCacheDir = format!"%s/config/htmlcache"(
-		getConfig().steamPath.expandTilde,
-	);
-	rmdirRecurse(htmlCacheDir);  // Required to get Steam library to load the new sharedconfig.vdf
+	if (false)
+	{
+		auto htmlCacheDir = format!"%s/config/htmlcache"(
+			getConfig().steamPath.expandTilde,
+		);
+		rmdirRecurse(htmlCacheDir);  // Required to get Steam library to load the new sharedconfig.vdf
+	}
+
+	stderr.writeln("Done. Now, start Steam, then run:\n\nsteam://resetcollections\n\nand confirm the prompt in Steam.");
 }
